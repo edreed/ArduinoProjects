@@ -1,5 +1,6 @@
 #include <avr/pgmspace.h>
-#include <pitches.h>
+
+#include "pitches.h"
 
 #define NOTE_REST 0
 
