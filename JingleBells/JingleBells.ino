@@ -4,7 +4,7 @@
 
 #define NOTE_REST 0
 
-#define TONE_PIN 8
+#define TONE_PIN 3
 
 // The music tempo in beats per minute.
 #define TEMPO 180
