@@ -46,6 +46,9 @@ auto g_colorWipeBlue  = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_con
 auto g_pulseRed       = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration, RED_COLOR);
 auto g_pulseGreen     = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration, GREEN_COLOR);
 auto g_pulseBlue      = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration, BLUE_COLOR);
+auto g_cometRed       = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration, RED_COLOR);
+auto g_cometGreen     = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration, GREEN_COLOR);
+auto g_cometBlue      = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration, BLUE_COLOR);
 
 anime::Sequence<Adafruit_NeoPixel_ZeroDMA>* g_currentSequence = &g_solidBlack;
 
@@ -103,6 +106,18 @@ void loop() {
 
       case COMMAND_6_KEY:
         startSequence(&g_pulseBlue);
+        break;
+      
+      case COMMAND_7_KEY:
+        startSequence(&g_cometRed);
+        break;
+      
+      case COMMAND_8_KEY:
+        startSequence(&g_cometGreen);
+        break;
+      
+      case COMMAND_9_KEY:
+        startSequence(&g_cometBlue);
         break;
     }
     

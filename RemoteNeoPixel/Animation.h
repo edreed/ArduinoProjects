@@ -1,3 +1,4 @@
+#include <array>
 #include <utility>
 
 namespace anime {
@@ -180,6 +181,45 @@ namespace anime {
           (((((_color >>  0) & 0x0FF) * multiplier) / 0x20) <<  0);
 
         this->getPixels().fill(color);
+      }
+  };
+
+  template <typename pixels_t> class Comet final : public Sequence<pixels_t> {
+    public:
+      Comet (pixels_t* pixels, Configuration const* configuration, uint32_t color) : Sequence<pixels_t>(pixels, configuration) {
+        for (auto it = _colors.rbegin(); it != _colors.rend(); ++it) {
+          *it = color;
+          color = reduceBrightness(color);
+        }
+      }
+
+    private:
+      array<uint32_t, 4> _colors;
+
+      uint32_t reduceBrightness(uint32_t color) {
+        return (color >> 1) & 0x7F7F7F7F;
+      }
+
+      void startSelf() override {
+        fillPixels(0);
+      }
+
+      void animateSelf(uint32_t step) override {
+        fillPixels(step);
+      }
+
+      void fillPixels(uint32_t step) {
+        auto numPixels = this->getPixels().numPixels();
+
+        for (uint16_t i = 0; i < numPixels; ++i) {
+          auto pixel = static_cast<uint16_t>((step + i) % numPixels);
+
+          if (i < _colors.size()) {
+            this->getPixels().setPixelColor(pixel, _colors[i]);
+          } else {
+            this->getPixels().setPixelColor(pixel, 0);
+          }
+        }
       }
   };
 
