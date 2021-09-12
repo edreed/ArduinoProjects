@@ -28,29 +28,22 @@
 
 #define PIXEL_ANIMATION_STEP_TIME_MILLIS 50
 
-#define BLACK_COLOR 0x000000
-#define RED_COLOR   0xFF0000
-#define GREEN_COLOR 0x00FF00
-#define BLUE_COLOR  0x0000FF
-
 Adafruit_NeoPixel_ZeroDMA g_pixels(NUM_PIXELS, NEOPIXEL_PIN, NEO_GRB);
 Adafruit_DotStar g_status(1, DOTSTAR_DATA_PIN, DOTSTAR_CLOCK_PIN, DOTSTAR_BGR);
 
+anime::Configuration g_PowerOffConfiguration;
+
+auto g_powerOffColor = anime::make_sequence<anime::SolidColor>(&g_pixels, &g_PowerOffConfiguration);
+
 anime::Configuration g_configuration;
 
-auto g_solidBlack     = anime::make_sequence<anime::SolidColor>(&g_pixels, &g_configuration, BLACK_COLOR);
-auto g_rainbowCycle   = anime::make_sequence<anime::RainbowCycle>(&g_pixels, &g_configuration);
-auto g_colorWipeRed   = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_configuration, RED_COLOR);
-auto g_colorWipeGreen = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_configuration, GREEN_COLOR);
-auto g_colorWipeBlue  = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_configuration, BLUE_COLOR);
-auto g_pulseRed       = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration, RED_COLOR);
-auto g_pulseGreen     = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration, GREEN_COLOR);
-auto g_pulseBlue      = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration, BLUE_COLOR);
-auto g_cometRed       = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration, RED_COLOR);
-auto g_cometGreen     = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration, GREEN_COLOR);
-auto g_cometBlue      = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration, BLUE_COLOR);
+auto g_solidColor   = anime::make_sequence<anime::SolidColor>(&g_pixels, &g_configuration);
+auto g_rainbowCycle = anime::make_sequence<anime::RainbowCycle>(&g_pixels, &g_configuration);
+auto g_colorWipe    = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_configuration);
+auto g_pulse        = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration);
+auto g_comet        = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration);
 
-anime::Sequence<Adafruit_NeoPixel_ZeroDMA>* g_currentSequence = &g_solidBlack;
+anime::Sequence<Adafruit_NeoPixel_ZeroDMA>* g_currentSequence = &g_powerOffColor;
 
 bool  g_powerOn = true;
 
@@ -85,39 +78,31 @@ void loop() {
         break;
 
       case COMMAND_1_KEY:
-        startSequence(&g_colorWipeRed);
+        g_configuration.setColor(RED_COLOR);
         break;
 
       case COMMAND_2_KEY:
-        startSequence(&g_colorWipeGreen);
+        g_configuration.setColor(GREEN_COLOR);
         break;
 
       case COMMAND_3_KEY:
-        startSequence(&g_colorWipeBlue);
+        g_configuration.setColor(BLUE_COLOR);
         break;
 
       case COMMAND_4_KEY:
-        startSequence(&g_pulseRed);
+        startSequence(&g_solidColor);
         break;
 
       case COMMAND_5_KEY:
-        startSequence(&g_pulseGreen);
+        startSequence(&g_colorWipe);
         break;
 
       case COMMAND_6_KEY:
-        startSequence(&g_pulseBlue);
+        startSequence(&g_pulse);
         break;
       
       case COMMAND_7_KEY:
-        startSequence(&g_cometRed);
-        break;
-      
-      case COMMAND_8_KEY:
-        startSequence(&g_cometGreen);
-        break;
-      
-      case COMMAND_9_KEY:
-        startSequence(&g_cometBlue);
+        startSequence(&g_comet);
         break;
     }
     
@@ -143,7 +128,7 @@ void setPowerOn(bool powerOn) {
       g_status.fill(RED_COLOR);
       g_status.show();
       g_currentSequence->stop();
-      g_solidBlack.start();
+      g_powerOffColor.start();
     }
 
     g_powerOn = powerOn;
