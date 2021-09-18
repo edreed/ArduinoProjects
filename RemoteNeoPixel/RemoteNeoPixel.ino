@@ -1,3 +1,4 @@
+#include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoPixel_ZeroDMA.h>
 #include <Adafruit_DotStar.h>
 #define DECODE_NEC 1
@@ -28,7 +29,13 @@
 
 #define PIXEL_ANIMATION_STEP_TIME_MILLIS 50
 
-Adafruit_NeoPixel_ZeroDMA g_pixels(NUM_PIXELS, NEOPIXEL_PIN, NEO_GRB);
+#ifndef NO_DMA
+#define NEO_PIXEL_TYPE Adafruit_NeoPixel_ZeroDMA
+#else
+#define NEO_PIXEL_TYPE Adafruit_NeoPixel
+#endif
+
+NEO_PIXEL_TYPE g_pixels(NUM_PIXELS, NEOPIXEL_PIN, NEO_GRB);
 Adafruit_DotStar g_status(1, DOTSTAR_DATA_PIN, DOTSTAR_CLOCK_PIN, DOTSTAR_BGR);
 
 anime::Configuration g_PowerOffConfiguration;
@@ -43,7 +50,7 @@ auto g_colorWipe    = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_confi
 auto g_pulse        = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration);
 auto g_comet        = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration);
 
-anime::Sequence<Adafruit_NeoPixel_ZeroDMA>* g_currentSequence = &g_powerOffColor;
+anime::Sequence<NEO_PIXEL_TYPE>* g_currentSequence = &g_powerOffColor;
 
 bool  g_powerOn = true;
 
@@ -135,7 +142,7 @@ void setPowerOn(bool powerOn) {
   }
 }
 
-void startSequence(anime::Sequence<Adafruit_NeoPixel_ZeroDMA>* sequence) {
+void startSequence(anime::Sequence<NEO_PIXEL_TYPE>* sequence) {
   g_currentSequence->stop();
   g_currentSequence = sequence;
   sequence->start();
