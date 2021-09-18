@@ -158,7 +158,7 @@ namespace anime {
 
     private:
       void startSelf() override {
-        this->getPixels().fill(0);
+        this->getPixels().fill(BLACK_COLOR);
       } 
 
       void animateSelf(uint32_t step) override {
@@ -197,7 +197,7 @@ namespace anime {
       uint32_t _color;
 
       void startSelf() {
-        this->getPixels().fill(0);
+        this->getPixels().fill(BLACK_COLOR);
       }
 
       void animateSelf(uint32_t step) override {
