@@ -157,6 +157,10 @@ namespace anime {
       }
 
     private:
+      void startSelf() override {
+        this->getPixels().fill(0);
+      } 
+
       void animateSelf(uint32_t step) override {
         auto& pixels = this->getPixels();
         
