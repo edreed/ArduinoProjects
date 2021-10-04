@@ -291,13 +291,13 @@ namespace anime {
         int multiplier = pixels.sine8(static_cast<uint8_t>((step << 2) + 0x40));
 
         auto& config = this->getConfiguration();
-        uint32_t color0 = config.getColor(0);
+        uint32_t color1 = config.getColor(1);
 
         uint32_t color = detail::colorRGBW(
-          ((_redDiff * multiplier)   / 255) + detail::getRed(color0),
-          ((_greenDiff * multiplier) / 255) + detail::getGreen(color0),
-          ((_blueDiff * multiplier)  / 255) + detail::getBlue(color0),
-          ((_whiteDiff * multiplier) / 255) + detail::getWhite(color0));
+          ((_redDiff * multiplier)   / 255) + detail::getRed(color1),
+          ((_greenDiff * multiplier) / 255) + detail::getGreen(color1),
+          ((_blueDiff * multiplier)  / 255) + detail::getBlue(color1),
+          ((_whiteDiff * multiplier) / 255) + detail::getWhite(color1));
 
         this->getPixels().fill(color);
       }
