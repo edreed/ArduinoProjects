@@ -43,12 +43,14 @@ anime::Configuration g_PowerOffConfiguration;
 auto g_powerOffColor = anime::make_sequence<anime::SolidColor>(&g_pixels, &g_PowerOffConfiguration);
 
 anime::Configuration g_configuration;
+anime::Configuration g_fadeConfigurtion{RED_COLOR, GREEN_COLOR};
 
 auto g_solidColor   = anime::make_sequence<anime::SolidColor>(&g_pixels, &g_configuration);
 auto g_rainbowCycle = anime::make_sequence<anime::RainbowCycle>(&g_pixels, &g_configuration);
 auto g_colorWipe    = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_configuration);
 auto g_pulse        = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration);
 auto g_comet        = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration);
+auto g_fade         = anime::make_sequence<anime::Fade>(&g_pixels, &g_fadeConfigurtion);
 
 anime::Sequence<NEO_PIXEL_TYPE>* g_currentSequence = &g_powerOffColor;
 
@@ -85,15 +87,15 @@ void loop() {
         break;
 
       case COMMAND_1_KEY:
-        g_configuration.setColor(RED_COLOR);
+        g_configuration.setColor(0, RED_COLOR);
         break;
 
       case COMMAND_2_KEY:
-        g_configuration.setColor(GREEN_COLOR);
+        g_configuration.setColor(0, GREEN_COLOR);
         break;
 
       case COMMAND_3_KEY:
-        g_configuration.setColor(BLUE_COLOR);
+        g_configuration.setColor(0, BLUE_COLOR);
         break;
 
       case COMMAND_4_KEY:
@@ -110,6 +112,10 @@ void loop() {
       
       case COMMAND_7_KEY:
         startSequence(&g_comet);
+        break;
+      
+      case COMMAND_8_KEY:
+        startSequence(&g_fade);
         break;
     }
     

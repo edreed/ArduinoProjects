@@ -8,18 +8,61 @@
 
 namespace anime {
   using namespace std;
+
+  namespace detail {
+    constexpr uint8_t getWhite(uint32_t color) {
+      return static_cast<uint8_t>((color >> 24) & 0xFF);
+    }
+
+    constexpr uint8_t getRed(uint32_t color) {
+      return static_cast<uint8_t>((color >> 16) & 0xFF);
+    }
+
+    constexpr uint8_t getGreen(uint32_t color) {
+      return static_cast<uint8_t>((color >> 8) & 0xFF);
+    }
+
+    constexpr uint8_t getBlue(uint32_t color) {
+      return static_cast<uint8_t>(color & 0xFF);
+    }
+
+    constexpr uint32_t colorRGBW(int32_t red, int32_t green, int32_t blue, int32_t white) {
+      return ((static_cast<uint32_t>(white) & 0xFF) << 24) |
+             ((static_cast<uint32_t>(red)   & 0xFF) << 16) |
+             ((static_cast<uint32_t>(green) & 0xFF) <<  8) |
+             ((static_cast<uint32_t>(blue)  & 0xFF));
+    }
+  }
   
   class Configuration {
     public:
       static const uint32_t DEFAULT_STEP_MILLIS = 50ul;
       static const uint8_t  DEFAULT_BRIGHTNESS  = 32;
 
-      void setColor(uint32_t color) {
-        _color = color;
+      Configuration() = default;
+
+      Configuration(initializer_list<uint32_t> colors) {
+        auto iter = begin(colors);
+        for (size_t index = 0; index < colors.size(); ++index) {
+          if (index >= _colors.size()) {
+            break;
+          }
+
+          _colors[index] = *iter++;
+        }
       }
 
-      uint32_t getColor() const {
-        return _color;
+      void setColor(size_t index, uint32_t color) {
+        if (index < _colors.size()) {
+          _colors[index] = color;
+        }
+      }
+
+      uint32_t getColor(size_t index) const {
+        if (index < _colors.size()) {
+          return _colors[index];
+        }
+        return BLACK_COLOR;
       }
 
       void setStepMillis(uint32_t stepMillis) {
@@ -43,14 +86,14 @@ namespace anime {
       }
 
     private:
-      volatile uint32_t _color = BLACK_COLOR;
+      array<volatile uint32_t, 2> _colors = { BLACK_COLOR, BLACK_COLOR };
       volatile uint32_t _stepMillis = DEFAULT_STEP_MILLIS;
       volatile uint8_t  _brightness = DEFAULT_BRIGHTNESS;
   };
 
   template <typename pixels_t> class Sequence {
     public:
-      Sequence(pixels_t* pixels, Configuration const* configuration) : _pixels(pixels), _configuration(configuration), _lastColor(configuration->getColor()) {
+      Sequence(pixels_t* pixels, Configuration const* configuration) : _pixels(pixels), _configuration(configuration), _lastColor(configuration->getColor(0)) {
         
       }
 
@@ -71,7 +114,7 @@ namespace anime {
     void animate() {
       if (_enabled) {
         bool show = false;
-        uint32_t nextColor = _configuration->getColor();
+        uint32_t nextColor = _configuration->getColor(0);
 
         if (nextColor != _lastColor) {
           changeColorSelf(nextColor);
@@ -142,7 +185,7 @@ namespace anime {
 
     private:
       void startSelf() override {
-        this->getPixels().fill(this->getConfiguration().getColor());
+        this->getPixels().fill(this->getConfiguration().getColor(0));
       }
 
       void changeColorSelf(uint32_t newColor) override {
@@ -164,7 +207,7 @@ namespace anime {
       void animateSelf(uint32_t step) override {
         auto& pixels = this->getPixels();
         
-        pixels.setPixelColor(step % pixels.numPixels(), this->getConfiguration().getColor());
+        pixels.setPixelColor(step % pixels.numPixels(), this->getConfiguration().getColor(0));
       }
   };
 
@@ -194,9 +237,7 @@ namespace anime {
       }
 
     private:
-      uint32_t _color;
-
-      void startSelf() {
+      void startSelf() override {
         this->getPixels().fill(BLACK_COLOR);
       }
 
@@ -207,12 +248,56 @@ namespace anime {
           multiplier = 0x20 - multiplier;
         }
 
-        uint32_t color = this->getConfiguration().getColor();
-        color =
-          (((((color >> 24) & 0x0FF) * multiplier) / 0x20) << 24) |
-          (((((color >> 16) & 0x0FF) * multiplier) / 0x20) << 16) |
-          (((((color >>  8) & 0x0FF) * multiplier) / 0x20) <<  8) |
-          (((((color >>  0) & 0x0FF) * multiplier) / 0x20) <<  0);
+        uint32_t color = this->getConfiguration().getColor(0);
+        color = detail::colorRGBW(
+          ((detail::getRed(color)   * multiplier) / 0x20),
+          ((detail::getGreen(color) * multiplier) / 0x20),
+          ((detail::getBlue(color)  * multiplier) / 0x20),
+          ((detail::getWhite(color) * multiplier) / 0x20));
+
+        this->getPixels().fill(color);
+      }
+  };
+
+  template <typename pixels_t> class Fade final : public Sequence<pixels_t> {
+    public:
+      Fade(pixels_t* pixels, Configuration const* configuration) : Sequence<pixels_t>(pixels, configuration) {
+        initialize();
+      }
+
+    private:
+      int16_t _redDiff;
+      int16_t _greenDiff;
+      int16_t _blueDiff;
+      int16_t _whiteDiff;
+
+      void initialize() {
+        auto& config = this->getConfiguration();
+        uint32_t color0 = config.getColor(0);
+        uint32_t color1 = config.getColor(1);
+
+        _redDiff   = detail::getRed(color0)   - detail::getRed(color1);
+        _greenDiff = detail::getGreen(color0) - detail::getGreen(color1);
+        _blueDiff  = detail::getBlue(color0)  - detail::getBlue(color1);
+        _whiteDiff = detail::getWhite(color0) - detail::getWhite(color1);
+      }
+      
+      void startSelf() override {
+        this->getPixels().fill(this->getConfiguration().getColor(0));
+      }
+
+      void animateSelf(uint32_t step) override {
+        auto& pixels = this->getPixels();
+        int multiplier = pixels.sine8(static_cast<uint8_t>((step << 2) + 0x40));
+
+        auto& config = this->getConfiguration();
+        uint32_t color0 = config.getColor(0);
+
+        uint32_t color = detail::colorRGBW(
+          ((_redDiff * multiplier)   / 255) + detail::getRed(color0),
+          ((_greenDiff * multiplier) / 255) + detail::getGreen(color0),
+          ((_blueDiff * multiplier)  / 255) + detail::getBlue(color0),
+          ((_whiteDiff * multiplier) / 255) + detail::getWhite(color0));
 
         this->getPixels().fill(color);
       }
@@ -221,7 +306,7 @@ namespace anime {
   template <typename pixels_t> class Comet final : public Sequence<pixels_t> {
     public:
       Comet(pixels_t* pixels, Configuration const* configuration) : Sequence<pixels_t>(pixels, configuration) {
-        fillColors(this->getConfiguration().getColor());
+        fillColors(this->getConfiguration().getColor(0));
       }
 
     private:
