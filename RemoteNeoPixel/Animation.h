@@ -1,11 +1,11 @@
 #include <array>
 #include <utility>
 
-#define BLACK_COLOR 0x000000
-#define RED_COLOR   0xFF0000
-#define GREEN_COLOR 0x00FF00
-#define BLUE_COLOR  0x0000FF
-
+#define BLACK_COLOR  0x00000000
+#define RED_COLOR    0x00FF0000
+#define GREEN_COLOR  0x0000FF00
+#define BLUE_COLOR   0x000000FF
+#define ORANGE_COLOR 0x00FFA500
 namespace anime {
   using namespace std;
 
@@ -300,6 +300,60 @@ namespace anime {
           ((_whiteDiff * multiplier) / 255) + detail::getWhite(color1));
 
         this->getPixels().fill(color);
+      }
+  };
+
+  template <typename pixels_t> class AlternateFade final : public Sequence<pixels_t> {
+    public:
+      AlternateFade(pixels_t* pixels, Configuration const* configuration) : Sequence<pixels_t>(pixels, configuration) {
+        initialize();
+      }
+
+    private:
+      int16_t _redDiff;
+      int16_t _greenDiff;
+      int16_t _blueDiff;
+      int16_t _whiteDiff;
+
+      void initialize() {
+        auto& config = this->getConfiguration();
+        uint32_t color0 = config.getColor(0);
+        uint32_t color1 = config.getColor(1);
+
+        _redDiff   = detail::getRed(color0)   - detail::getRed(color1);
+        _greenDiff = detail::getGreen(color0) - detail::getGreen(color1);
+        _blueDiff  = detail::getBlue(color0)  - detail::getBlue(color1);
+        _whiteDiff = detail::getWhite(color0) - detail::getWhite(color1);
+      }
+      
+      void startSelf() override {
+        this->getPixels().fill(this->getConfiguration().getColor(0));
+      }
+
+      void animateSelf(uint32_t step) override {
+        auto& pixels = this->getPixels();
+        int multiplier = pixels.sine8(static_cast<uint8_t>((step << 2) + 0x40));
+
+        auto& config = this->getConfiguration();
+        uint32_t color0 = config.getColor(0);
+        uint32_t color1 = config.getColor(1);
+
+        std::array<uint32_t, 2> colors = {
+          detail::colorRGBW(
+            ((_redDiff * multiplier)   / 255) + detail::getRed(color1),
+            ((_greenDiff * multiplier) / 255) + detail::getGreen(color1),
+            ((_blueDiff * multiplier)  / 255) + detail::getBlue(color1),
+            ((_whiteDiff * multiplier) / 255) + detail::getWhite(color1)),
+          detail::colorRGBW(
+            ((-_redDiff * multiplier)   / 255) + detail::getRed(color0),
+            ((-_greenDiff * multiplier) / 255) + detail::getGreen(color0),
+            ((-_blueDiff * multiplier)  / 255) + detail::getBlue(color0),
+            ((-_whiteDiff * multiplier) / 255) + detail::getWhite(color0)),
+        };
+
+        for (size_t i = 0; i < pixels.numPixels(); ++i) {
+          pixels.setPixelColor(i, colors[i & 1]);
+        }
       }
   };
 

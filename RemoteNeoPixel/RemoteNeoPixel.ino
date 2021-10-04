@@ -43,14 +43,16 @@ anime::Configuration g_PowerOffConfiguration;
 auto g_powerOffColor = anime::make_sequence<anime::SolidColor>(&g_pixels, &g_PowerOffConfiguration);
 
 anime::Configuration g_configuration;
-anime::Configuration g_fadeConfigurtion{RED_COLOR, GREEN_COLOR};
+anime::Configuration g_fadeConfiguration{RED_COLOR, GREEN_COLOR};
+anime::Configuration g_fireConfiguration{RED_COLOR, ORANGE_COLOR};
 
 auto g_solidColor   = anime::make_sequence<anime::SolidColor>(&g_pixels, &g_configuration);
 auto g_rainbowCycle = anime::make_sequence<anime::RainbowCycle>(&g_pixels, &g_configuration);
 auto g_colorWipe    = anime::make_sequence<anime::ColorWipe>(&g_pixels, &g_configuration);
 auto g_pulse        = anime::make_sequence<anime::Pulse>(&g_pixels, &g_configuration);
 auto g_comet        = anime::make_sequence<anime::Comet>(&g_pixels, &g_configuration);
-auto g_fade         = anime::make_sequence<anime::Fade>(&g_pixels, &g_fadeConfigurtion);
+auto g_fade         = anime::make_sequence<anime::Fade>(&g_pixels, &g_fadeConfiguration);
+auto g_fire         = anime::make_sequence<anime::AlternateFade>(&g_pixels, &g_fireConfiguration);
 
 anime::Sequence<NEO_PIXEL_TYPE>* g_currentSequence = &g_powerOffColor;
 
@@ -64,6 +66,8 @@ void setup() {
   g_pixels.begin();
 
   setPowerOn(false);
+
+  g_fireConfiguration.setStepMillis(25);
 }
 
 void loop() {
@@ -116,6 +120,10 @@ void loop() {
       
       case COMMAND_8_KEY:
         startSequence(&g_fade);
+        break;
+      
+      case COMMAND_9_KEY:
+        startSequence(&g_fire);
         break;
     }
     
