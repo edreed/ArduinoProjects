@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoPixel_ZeroDMA.h>
 #include <Adafruit_DotStar.h>
-#define DECODE_NEC 1
+#define DECODE_NEC
 #include <IRremote.h>
 
 #include "Animation.h"
